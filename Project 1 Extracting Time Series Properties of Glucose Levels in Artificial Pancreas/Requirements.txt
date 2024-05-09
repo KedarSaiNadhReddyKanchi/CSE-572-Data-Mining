@@ -1,0 +1,54 @@
+README
+
+Using the directions mentioned in the Analysis Procedure section of the project description PDF file, I have developed the code logic for this project. 
+
+But first to before beginning the developing the code for this code, I have imported the pandas and NumPy libraries that would be used as suggested in the project description PDF file. 
+
+Now since the libraries, have been imported into the Jupyter environment, I now moved to load the provided CGM Sensor Data CSV file into the Jupyter environment and read the csv file. But since it was mentioned in the project description PDF file, we need to use only 4 columns from the CSV file – those are the Date, time, the Sensor Glucose (mg/dL) and the ISIG Value columns. So, while reading the CGM Sensor Data CSV file, using the ‘usecols’ attribute within in the ‘read_csv’ function to read only the above mentioned 4 columns. 
+
+Now the next step after reading the CGM Sensor Data CSV file, was to create a new column called date time stamp which is again specified in the project description PDF file as we would needing to sort the data as per this column for our future calculations. 
+
+Now the next important step is to clean the CGM Sensor Data CSV file as the project description PDF file mentions to tackle the missing data problem by following the common methods like deletion of the entire day of the data or interpolation. Since, the CGM Sensor Data CSV file is huge, I decided that the interpolation method would be not a good way as it might dilute the quality of the results. So, I went ahead with the deletion method. So, the first step for deletion method is to first check whether there are any missing values in the data frame. Upon, running the command, I found that there are 4168 missing values in the Sensor Glucose (mg/dL) and the ISIG Value columns. 
+
+So, now I need to remove all the data for all the dates that are missing some values. So, for this the first step I took is to first extract all the dates that contain missing values into a list. Now, since we need to delete all the rows whose date is present in the extracted list, it is tough to loop over the data frame as a whole. So, I have used the concept of indexing to implement this logic. So, I set the index on the date column for the CGM Sensor Data and then simply dropped all the rows whose index i.e. date is present in the list of dates that needs to be removed. Since there is a deletion process executed on the data frame, I have reset the index to the initial state. With this, the clean up process for the CGM Sensor Data is completed and so finally before moving on to the insulin data, I am cloning the CGM Sensor Data Frame so that I could use the cloned data frame for further analysis, by keeping the original data frame intact for easy access in the later steps of the code if needed. 
+
+So, now moving on to the Insulin Data, I have loaded the CSV file into the Jupyter environment. So, again even in this I had to create a date time stamp column by combining the date and time columns for further comparisons. So, now I move on to find when the auto mode starts. It is specified in the project description file that the insulin data is in reverse order of time. This means that the first row is the end of the data collection whereas the last row is the beginning of the data collection. The data starts with manual mode. Manual mode continues until you get a message “AUTO MODE ACTIVE PLGM OFF” in the column “Q” of the InsulinData.csv. From then onwards Auto mode starts. You may get multiple “AUTO MODE ACTIVE PLGM OFF” in column “Q” but only use the earliest one to determine when you switch to auto mode. There is no switching back to manual mode, so the first task is to determine the time stamp when Auto mode starts. So, as per this condition to get the first occurrence of the  “AUTO MODE ACTIVE PLGM OFF”, I have sorted the insulin data by the newly created date time stamp column in the ascending order.
+
+Now, after sorting the insulin data in the ascending order, I have extracted all the rows where the column “Alarm” has the value “AUTO MODE ACTIVE PLGM OFF”. And then from those extracted rows, I have further extracted the 1st row which basically the gives the 1st occurrence of the value “AUTO MODE ACTIVE PLGM OFF”.
+
+Again, following the directions specified in the project, once you determine the start of Auto Mode from InsulinData.csv, you must figure out the timestamp in CGMData.csv where Auto mode starts. This can be done simply by searching for the time stamp that is nearest to (and later than) the Auto mode start time stamp obtained from InsulinData.csv. So, following these suggestions, I have first again made a clone of the processed and cleaned CGM Sensor Data frame. Then I sorted the cloned data frame in ascending order by the date time stamp column. Finally, I created two new data frames where one would contain the data which was collected in auto mode and the other would contain the data collected in manual mode by using the condition where the value of the date time stamp in the cloned & sorted CGM Sensor Data frame is greater than or equal to the extracted date time stamp of when the data collection mode changed from manual to auto. 
+
+And then I created an index on both the newly created data frames on the date time stamp columns. Then as per the given instructions in the project description file, I have figured out all the dates basing on the lambda calculation. And then for each needed percentage I have just used the between command to input various time zones as specified in the description file for daytime, overnight and whole day. Once all the required percentages both auto and manual have been calculated, I have transformed all those values into a data frame which was then pushed to be saved into the results.csv file without any headers as specified.
+
+So, a summary of the steps is as follows 
+
+Steps to run the code:
+1. Read data from 'CGMData.csv' with columns 'Date', 'Time', 'Sensor Glucose (mg/dL)'.
+2. Read data from 'InsulinData.csv' with columns 'Date', 'Time', 'Alarm'.
+3. Remove Nan values ​​for sensor glucose (mg/dL) from "CGMData.csv" data
+4. Combination of date and time object in date_time for cgmFileData and insulinFileData
+5. Extract the date when mode changes from manual to automatic in date_auto_mode
+6. Automatic mode data frames are created based on date_auto_mode where the change occurs, i.e. when dates are greater than and equal to date_auto_mode
+7. Manual mode data frames are created based on date_auto_mode where the change takes place i.e. when dates are less than date_auto_mode
+8. Startup calculations in automatic mode
+	i) Calculate the total number of different dates for the auto mode and store it in total_distinct_date_count_auto_mode
+	ii) Calculate the percentage of time for the given values ​​for midnight, day and all day for data frames in automatic mode
+	iii) In this case, we group by "date" for the given range and add the total number of times.
+	iv) Then we average the total_distinct_date_count_auto_mode and divide the result by 288. We then multiply it by 100 to get the percentage.
+	v) Create 6 data frames for the given glucose readings, ie for the ranges '>180', '>250', '>=70 & <=180', '>=70 and <=150', '<70' and ' <54'
+
+9. Calculations for starting in manual mode
+	i) Calculate the total number of different dates for manual mode and store it in total_distinct_date_count_manual_mode
+	ii) Calculate the percentage of time for certain values ​​for midnight, day and all day for data frames in manual mode
+	iii) In this case, we group by "date" for the given range and add the total number of times.
+	iv) Then we average the total_distinct_date_count_manual_mode and divide the result by 288. We then multiply it by 100 to get the percentage.
+	v) Create 6 data frames for the given glucose readings, ie for the ranges '>180', '>250', '>=70 & <=180', '>=70 and <=150', '<70' and ' <54'
+
+10. Record the result as a 2x18 matrix, where rows 0 and 1 represent the manual and automatic mode results, respectively.
+
+Remarks:
+Steps to run the code:
+1. Download the zip folder
+2. Extract the specified zip folder
+3. Go to the folder and run python main.py . from
+4. The result is updated in Results.csv
